@@ -42,6 +42,17 @@ export default function App() {
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [tempApiKey, setTempApiKey] = useState('');
   const [newFact, setNewFact] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
+
+  // Auto-hide toast notification
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 4500);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const handleAddFact = () => {
     if (!newFact.trim()) return;
@@ -161,7 +172,14 @@ export default function App() {
 
       const memoryInsert = `\n\n[TRVALÁ PAMĚŤ (Fakta o uživateli, která musíš znát a respektovat v každé odpovědi)]:\n- Jméno uživatele: ${settings.userNickname || 'Uživatel'}${factsText ? '\n' + factsText : ''}`;
 
-      const dynamicSystemPrompt = settings.systemPrompt + memoryInsert;
+      const memoryInstructions = `\n\n[POKYNY PRO AUTOMATICKÉ UKLÁDÁNÍ PAMĚTI]:
+Kdykoliv se během konverzace dozvíš novou podstatnou trvalou informaci nebo fakt o uživateli (věk, práce, zájmy, rodina, jméno, preference atd.), automaticky ji ulož tak, že na konec své odpovědi připojíš tag:
+<save_fact>Stručný a jasný fakt o uživateli v češtině (např. Uživatel pracuje v marketingu)</save_fact>
+Pokud tě uživatel požádá, abys nějakou dříve uloženou informaci zapomněl, nebo pokud se dříve uložený fakt změní, odstraň ho takto:
+<forget_fact>Přesný text původního faktu k odstranění</forget_fact>
+Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příští paměti. Ukládej pouze relevantní fakty.`;
+
+      const dynamicSystemPrompt = settings.systemPrompt + memoryInsert + memoryInstructions;
 
       const messagesToSend = [
         { role: 'system', content: dynamicSystemPrompt },
@@ -192,7 +210,69 @@ export default function App() {
 
       if (data.choices && data.choices[0]) {
         const assistantMessage: Message = data.choices[0].message;
-        setMessages((prev) => [...prev, assistantMessage]);
+        let content = assistantMessage.content || '';
+
+        // Extract save_fact and forget_fact tags
+        const saveFactRegex = /<save_fact>([\s\S]*?)<\/save_fact>/gi;
+        const forgetFactRegex = /<forget_fact>([\s\S]*?)<\/forget_fact>/gi;
+
+        const factsToAdd: string[] = [];
+        let match;
+        while ((match = saveFactRegex.exec(content)) !== null) {
+          if (match[1].trim()) factsToAdd.push(match[1].trim());
+        }
+
+        const factsToRemove: string[] = [];
+        while ((match = forgetFactRegex.exec(content)) !== null) {
+          if (match[1].trim()) factsToRemove.push(match[1].trim());
+        }
+
+        // Clean content from tags
+        const cleanedContent = content
+          .replace(saveFactRegex, '')
+          .replace(forgetFactRegex, '')
+          .trim();
+
+        const finalAssistantMessage: Message = {
+          ...assistantMessage,
+          content: cleanedContent
+        };
+
+        setMessages((prev) => [...prev, finalAssistantMessage]);
+
+        // Process state updates for facts
+        if (factsToAdd.length > 0 || factsToRemove.length > 0) {
+          setSettings((prev) => {
+            let updatedFacts = [...(prev.userFacts || [])];
+            
+            factsToAdd.forEach(fact => {
+              if (!updatedFacts.some(f => f.toLowerCase() === fact.toLowerCase())) {
+                updatedFacts.push(fact);
+              }
+            });
+
+            factsToRemove.forEach(fact => {
+              updatedFacts = updatedFacts.filter(f => f.toLowerCase() !== fact.toLowerCase() && !f.toLowerCase().includes(fact.toLowerCase()));
+            });
+
+            return {
+              ...prev,
+              userFacts: updatedFacts
+            };
+          });
+
+          if (factsToAdd.length > 0) {
+            setToast({
+              message: `🧠 Paměť: Automaticky uloženo "${factsToAdd[0]}"`,
+              type: 'success'
+            });
+          } else if (factsToRemove.length > 0) {
+            setToast({
+              message: `🧹 Paměť: Odstraněno "${factsToRemove[0]}"`,
+              type: 'info'
+            });
+          }
+        }
       } else {
         throw new Error('Unexpected API response structure.');
       }
@@ -690,6 +770,28 @@ export default function App() {
                 <ArrowRight size={13} />
               </button>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Toast Notification for Memory Updates */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            className={`fixed top-4 right-4 z-[100] flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-xs font-semibold leading-normal ${
+              toast.type === 'success'
+                ? 'bg-emerald-100/90 border-emerald-250 text-emerald-900 bg-emerald-50/95 border-emerald-200/80 shadow-[0_4px_25px_rgba(16,185,129,0.12)]'
+                : 'bg-indigo-50/95 border-indigo-200/80 text-indigo-900 shadow-[0_4px_25px_rgba(99,102,241,0.12)]'
+            }`}
+          >
+            <Sparkles size={14} className={toast.type === 'success' ? 'text-emerald-500' : 'text-indigo-500'} />
+            <span>{toast.message}</span>
+            <button onClick={() => setToast(null)} className="p-0.5 hover:bg-black/5 rounded-full shrink-0 ml-1 cursor-pointer">
+              <X size={12} className="opacity-60" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
