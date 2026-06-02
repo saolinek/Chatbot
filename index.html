@@ -1,9 +1,23 @@
 <!doctype html>
-<html lang="en">
+<html lang="cs">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+    <title>Minimalistický Chatbot</title>
+    <link rel="manifest" href="./manifest.json" />
+    <meta name="theme-color" content="#0f172a" />
+    <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+    <link rel="apple-touch-icon" href="./icon.svg" />
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          // Používáme relativní cestu, aby registrace fungovala pod jakoukoliv pod-složkou (např. na GitHub Pages)
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker registrován úspěšně!', reg.scope))
+            .catch(err => console.log('Chyba při registraci Service Workera:', err));
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

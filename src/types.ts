@@ -7,4 +7,12 @@ export interface Settings {
   apiKey: string;
   model: string;
   systemPrompt: string;
+  temperature?: number;
+  maxTokens?: number;
+  memoryMode?: 'full' | 'limit' | 'summary';
+  maxHistoryMessages?: number;
+  userNickname?: string;
+  aiPersonaName?: string;
+  customMemoryContext?: string;
 }
+

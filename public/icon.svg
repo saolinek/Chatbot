@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e293b;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#38bdf8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0284c7;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background with subtle border -->
+  <rect width="512" height="512" rx="128" fill="url(#grad)" stroke="#334155" stroke-width="4" />
+  
+  <!-- Sleek Glowing Dialog Bubble/Bot Symbol -->
+  <g transform="translate(116, 116)">
+    <!-- Shadow effect under the bubble -->
+    <path d="M48 40h184c26 0 48 22 48 48v104c0 26-22 48-48 48h-120l-64 48v-48H48c-26 0-48-22-48-48V88c0-26 22-48 48-48z" fill="#0284c7" opacity="0.3" filter="blur(8px)" />
+    <!-- Main speech structure -->
+    <path d="M48 32h184c26 0 48 22 48 48v104c0 26-22 48-48 48h-120l-64 48v-48H48c-26 0-48-22-48-48V80c0-26 22-48 48-48z" fill="url(#grad-glow)" />
+    
+    <!-- Face / Grid pattern -->
+    <circle cx="80" cy="112" r="16" fill="#ffffff" />
+    <circle cx="140" cy="112" r="16" fill="#ffffff" />
+    <circle cx="200" cy="112" r="16" fill="#ffffff" />
+    
+    <!-- Ambient Sparkle / Tech vibe -->
+    <path d="M220 60 L226 72 L238 72 L228 80 L232 92 L220 84 L208 92 L212 80 L202 72 L214 72 Z" fill="#ffffff" opacity="0.9" />
+  </g>
+</svg>
