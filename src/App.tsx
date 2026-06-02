@@ -4,20 +4,18 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Message, Settings } from './types';
 
 const POPULAR_MODELS = [
+  { id: 'openrouter/free', name: 'OpenRouter Free', provider: 'OpenRouter', tier: 'Free' },
+  { id: 'google/gemini-2.5-flash:free', name: 'Gemini 2.5 Flash (Free)', provider: 'Google', tier: 'Free' },
+  { id: 'meta-llama/llama-3-8b-instruct:free', name: 'Llama 3.8B (Free)', provider: 'Meta', tier: 'Free' },
   { id: 'anthropic/claude-3.7-sonnet', name: 'Claude 3.7 Sonnet', provider: 'Anthropic', tier: 'Premium' },
   { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', tier: 'Premium' },
   { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1', provider: 'DeepSeek', tier: 'Reasoning' },
-  { id: 'google/gemini-2.5-pro', name: 'Gemini 2.5 Pro', provider: 'Google', tier: 'Premium' },
-  { id: 'google/gemini-2.5-flash', name: 'Gemini 2.5 Flash', provider: 'Google', tier: 'Fast' },
-  { id: 'meta-llama/llama-3.3-70b-instruct', name: 'Llama 3.3 70B', provider: 'Meta', tier: 'Standard' },
-  { id: 'google/gemini-2.5-flash:free', name: 'Gemini 2.5 Flash (Free)', provider: 'Google', tier: 'Free' },
-  { id: 'meta-llama/llama-3-8b-instruct:free', name: 'Llama 3.8B (Free)', provider: 'Meta', tier: 'Free' },
 ];
 
 const defaultSettings: Settings = {
   apiKey: '',
-  model: 'anthropic/claude-3.7-sonnet',
-  systemPrompt: 'You are a helpful, minimalist AI assistant. Keep responses clear and concise.',
+  model: 'openrouter/free',
+  systemPrompt: 'You are a helpful, minimalist AI assistant. Keep responses clear and concise. Odpovídej vždy česky',
 };
 
 export default function App() {
@@ -88,7 +86,13 @@ export default function App() {
         if (response.ok) {
           const result = await response.json();
           if (result && result.data) {
-            setAllModels(result.data);
+            const mapped = result.data.map((m: any) => {
+              if (m.id === 'openrouter/auto') {
+                return { ...m, id: 'openrouter/free', name: 'OpenRouter Free' };
+              }
+              return m;
+            });
+            setAllModels(mapped);
           }
         }
       } catch (e) {
@@ -132,7 +136,7 @@ export default function App() {
         },
         body: JSON.stringify({
           messages: messagesToSend,
-          model: settings.model,
+          model: settings.model === 'openrouter/free' ? 'openrouter/auto' : settings.model,
         }),
       });
 
@@ -202,13 +206,21 @@ export default function App() {
           </button>
         </div>
         
+        <div 
+          onClick={() => setIsModelPickerOpen(true)}
+          className="hidden sm:block text-xs font-medium text-gray-500 hover:text-gray-900 transition-colors font-mono cursor-pointer select-none"
+        >
+          {settings.model}
+        </div>
+        
         <div className="flex items-center gap-2">
-          {settings.apiKey && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              {settings.model.split('/').pop()}
-            </span>
-          )}
+          <span 
+            onClick={() => setIsModelPickerOpen(true)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-150/75 hover:bg-gray-200/80 text-gray-700 transition-all cursor-pointer select-none border border-gray-200/55"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>{settings.model.split('/').pop()}</span>
+          </span>
           <button
             onClick={() => setIsSettingsOpen(true)}
             className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-all rounded-full"
@@ -275,12 +287,7 @@ export default function App() {
         /* The Actual Chat Workspace */
         <>
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 w-full max-w-4xl mx-auto flex flex-col gap-6">
-            {messages.length === 0 && (
-              <div className="flex-1 flex flex-col items-center justify-center text-center py-20 select-none">
-                <Bot className="w-8 h-8 text-gray-300 mb-2 animate-pulse" />
-                <p className="text-xs text-gray-400 font-mono">Select a model with + and type a message to start</p>
-              </div>
-            )}
+            {messages.length === 0 && null}
 
             <AnimatePresence initial={false}>
               {messages.map((msg, i) => (
@@ -432,7 +439,7 @@ export default function App() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder={`Message ${settings.model.split('/').pop()}...`}
+                    placeholder=""
                     rows={1}
                     className="w-full bg-transparent border-none py-3.5 pl-1 pr-14 text-sm resize-none focus:outline-none text-gray-800 placeholder:text-gray-400 max-h-[200px]"
                     style={{ 
