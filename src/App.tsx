@@ -170,11 +170,10 @@ export default function App() {
     }
   };
 
-  const handleClearChat = () => {
-    if (window.confirm('Are you sure you want to clear this entire chat history?')) {
-      setMessages([]);
-      localStorage.removeItem('minimal-chat-messages');
-    }
+  const handleNewChat = () => {
+    setMessages([]);
+    localStorage.removeItem('minimal-chat-messages');
+    setError(null);
   };
 
   // Filter models shown in the list
@@ -192,26 +191,23 @@ export default function App() {
     <div className="flex flex-col h-screen bg-gray-50 text-gray-900 font-sans selection:bg-gray-100">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 shrink-0">
-        <div className="flex items-center gap-2">
-          <MessageSquareCode className="w-5 h-5 text-gray-900" />
-          <h1 className="text-sm font-medium tracking-tight text-gray-900">Minimal Chat</h1>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleNewChat}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gray-950 text-white rounded-xl hover:bg-gray-800 transition-all shadow-sm cursor-pointer"
+            title="Start a new chat session"
+          >
+            <Plus size={13} />
+            <span>New Chat</span>
+          </button>
         </div>
         
         <div className="flex items-center gap-2">
           {settings.apiKey && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               {settings.model.split('/').pop()}
             </span>
-          )}
-          {messages.length > 0 && (
-            <button
-              onClick={handleClearChat}
-              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all rounded-full"
-              title="Clear entire chat"
-            >
-              <Trash2 size={16} />
-            </button>
           )}
           <button
             onClick={() => setIsSettingsOpen(true)}
@@ -280,34 +276,9 @@ export default function App() {
         <>
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 w-full max-w-4xl mx-auto flex flex-col gap-6">
             {messages.length === 0 && (
-              <div className="flex-1 flex flex-col items-center justify-center text-center px-4 max-w-md mx-auto py-12">
-                <motion.div
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.1 }}
-                  className="bg-white p-8 rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-gray-100 w-full"
-                >
-                  <Sparkles className="w-8 h-8 text-gray-900 mx-auto mb-4 animate-pulse" />
-                  <h2 className="text-gray-800 font-medium mb-2 text-base">Minimal Chat is Ready</h2>
-                  <p className="text-gray-500 text-sm leading-relaxed mb-6">
-                    Choose your favorite model using the <span className="inline-flex items-center justify-center w-5 h-5 bg-gray-100 rounded-md font-medium text-xs border border-gray-200">+</span> button inside the chatbox, and type below to start.
-                  </p>
-                  
-                  <div className="grid grid-cols-2 gap-2 text-left">
-                    <button
-                      onClick={() => setSettings(p => ({ ...p, model: 'anthropic/claude-3.7-sonnet' }))}
-                      className={`p-2.5 rounded-xl border text-xs font-medium transition-all ${settings.model === 'anthropic/claude-3.7-sonnet' ? 'bg-gray-950 border-gray-950 text-white' : 'bg-gray-50 border-gray-100 hover:bg-gray-100 text-gray-700'}`}
-                    >
-                      Claude 3.7
-                    </button>
-                    <button
-                      onClick={() => setSettings(p => ({ ...p, model: 'deepseek/deepseek-r1' }))}
-                      className={`p-2.5 rounded-xl border text-xs font-medium transition-all ${settings.model === 'deepseek/deepseek-r1' ? 'bg-gray-950 border-gray-950 text-white' : 'bg-gray-50 border-gray-100 hover:bg-gray-100 text-gray-700'}`}
-                    >
-                      DeepSeek R1
-                    </button>
-                  </div>
-                </motion.div>
+              <div className="flex-1 flex flex-col items-center justify-center text-center py-20 select-none">
+                <Bot className="w-8 h-8 text-gray-300 mb-2 animate-pulse" />
+                <p className="text-xs text-gray-400 font-mono">Select a model with + and type a message to start</p>
               </div>
             )}
 
@@ -480,10 +451,6 @@ export default function App() {
               </div>
             </div>
             
-            {/* Visual indication of currently chosen model to click-to-open */}
-            <p className="text-[10px] text-gray-400 text-center mt-3 tracking-wide select-none">
-              Currently talking with <span className="font-semibold text-gray-600 hover:underline cursor-pointer" onClick={() => setIsModelPickerOpen(true)}>{settings.model}</span>
-            </p>
           </footer>
         </>
       )}
