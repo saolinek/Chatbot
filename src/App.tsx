@@ -196,7 +196,7 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
         },
         body: JSON.stringify({
           messages: messagesToSend,
-          model: settings.model === 'openrouter/free' ? 'openrouter/auto' : settings.model,
+          model: settings.model,
           temperature: settings.temperature ?? 0.7,
           max_tokens: settings.maxTokens ?? 2048,
         }),
@@ -578,7 +578,7 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
 
               {/* Chat Input Text Area */}
               <div className="flex items-end gap-2.5">
-                <div className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl flex items-center pr-3 focus-within:ring-2 focus-within:ring-gray-950/5 focus-within:border-gray-400 transition-all min-h-[52px]">
+                <div className="relative flex-1 bg-gray-50 border border-gray-200 rounded-2xl flex items-center pr-3 overflow-hidden focus-within:ring-2 focus-within:ring-gray-950/5 focus-within:border-gray-400 transition-all min-h-[52px]">
                   
                   {/* Plus Button inside Chatbox */}
                   <button
@@ -602,7 +602,7 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
                     spellCheck="false"
                     data-form-type="other"
                     name="chat-message-input-no-autofill"
-                    className="w-full bg-transparent border-none py-3.5 pl-1 pr-14 text-sm resize-none focus:outline-none text-gray-800 placeholder:text-gray-400 max-h-[200px]"
+                    className="w-full bg-transparent border-none py-3.5 pl-1 pr-16 text-sm resize-none focus:outline-none text-gray-800 placeholder:text-gray-400 max-h-[200px] chat-textarea"
                     style={{ 
                       height: input ? 'auto' : '44px',
                     }}
