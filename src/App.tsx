@@ -283,9 +283,6 @@ export default function App() {
                   <Bot className="w-7 h-7 text-white" />
                 </div>
                 <h1 className="text-lg font-bold text-gray-900 tracking-tight">Jak vám dnes mohu pomoci?</h1>
-                <p className="text-xs text-gray-400 mt-2 max-w-sm leading-relaxed">
-                  Tento chat běží zcela lokálně ve vašem prohlížeči. Všechny informace a zprávy zůstávají v bezpečí u vás.
-                </p>
                 {!settings.apiKey && (
                   <button
                     onClick={() => setIsSettingsOpen(true)}
