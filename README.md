@@ -1,20 +1,22 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# Minimalist OpenRouter Chat (pro GitHub Pages)
 
-# Run and deploy your AI Studio app
+Tato aplikace je připravena k okamžitému nasazení (deploymentu) na **GitHub Pages** bez nutnosti jakékoli konfigurace kódu nebo serverů.
 
-This contains everything you need to run your app locally.
+## Jak aplikaci spustit na GitHub Pages zdarma a hned:
 
-View your app in AI Studio: https://ai.studio/apps/44e00ee3-a4e0-4ca0-865a-4a9e40fee81e
+1. **Nahrajte tento kód na GitHub**:
+   - Vytvořte si nový repozitář na GitHubu a nahrajte do něj celou složku s tímto projektem.
 
-## Run Locally
+2. **Aktivujte automatický deployment přes GitHub Actions** (Zabere 10 sekund):
+   - Jděte do nastavení vašeho repozitáře na GitHubu (**Settings**).
+   - V levém menu klikněte na **Pages**.
+   - V sekci **Build and deployment** najděte položku **Source** a změňte ji z *Deploy from a branch* na **GitHub Actions**.
 
-**Prerequisites:**  Node.js
+3. **To je vše!**:
+   - Jakmile tato změna proběhne (nebo jakmile připnete kód do větve `main` či `master`), automaticky se spustí přiložený GitHub Actions workflow.
+   - Během 1-2 minut bude váš minimalistický chat online na adrese: `https://<vase-jmeno>.github.io/<nazev-depozitare>/`
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Vlastnosti aplikace
+- **Zero Configuration**: Žádné složité nastavování, vše běží čistě v prohlížeči (client-side).
+- **Bezpečné uložení klíče**: Váš OpenRouter API klíč se ukládá ultra-bezpečně pouze lokálně ve vašem prohlížeči (`localStorage`) a nikdy neunikne na servery třetích stran.
+- **Využití jakýchkoli modelů**: Můžete použít jakýkoli model z OpenRouteru (např. `anthropic/claude-3.7-sonnet`, `meta-llama/llama-3-8b-instruct:free`, atd.).

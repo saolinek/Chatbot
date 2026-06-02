@@ -52,13 +52,21 @@ export default function App() {
         ...newMessages,
       ];
 
-      const res = await fetch('/api/chat', {
+      if (!settings.apiKey) {
+        throw new Error('OpenRouter API key is required. Please set it in Settings.');
+      }
+
+      const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${settings.apiKey}`,
+          'HTTP-Referer': window.location.href,
+          'X-Title': 'Minimal Chat'
+        },
         body: JSON.stringify({
           messages: messagesToSend,
           model: settings.model,
-          providedKey: settings.apiKey,
         }),
       });
 
@@ -107,7 +115,7 @@ export default function App() {
                 <Bot className="w-8 h-8 text-gray-300 mx-auto mb-4" />
                 <h2 className="text-gray-700 font-medium mb-2">Welcome to Minimal Chat</h2>
                 <p className="text-gray-500 text-sm leading-relaxed mb-6">
-                   A clean UI powered by OpenRouter. Ensure you have configured your API key in settings or as an environment variable to start.
+                   A clean UI powered by OpenRouter. Ensure you have configured your API key in settings to start.
                 </p>
                 <div className="flex gap-3 justify-center">
                    <button 
@@ -232,7 +240,7 @@ export default function App() {
               
               <div className="p-6 flex flex-col gap-5 text-sm">
                 <div className="space-y-2">
-                  <label className="font-medium text-gray-700">OpenRouter API Key (Optional)</label>
+                  <label className="font-medium text-gray-700">OpenRouter API Key (Required)</label>
                   <input
                     type="password"
                     value={settings.apiKey}
@@ -241,7 +249,7 @@ export default function App() {
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-400 transition-all font-mono text-xs"
                   />
                   <p className="text-[11px] text-gray-500 leading-relaxed">
-                    Leave blank if configured securely via server <code className="bg-gray-100 p-0.5 rounded font-mono text-[10px]">.env</code>. Saved locally to your browser.
+                    Required for GitHub Pages. Saved locally to your browser.
                   </p>
                 </div>
 
