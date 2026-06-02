@@ -22,7 +22,10 @@ const defaultSettings: Settings = {
   maxHistoryMessages: 10,
   userNickname: 'Uživatel',
   aiPersonaName: 'Asistent',
-  customMemoryContext: 'Uživatel preferuje stručné, jasné odpovědi a komunikuje výhradně v češtině.',
+  userFacts: [
+    'Uživatel preferuje stručné a jasné odpovědi.',
+    'Uživatel komunikuje výhradně v češtině.'
+  ],
 };
 
 export default function App() {
@@ -38,6 +41,25 @@ export default function App() {
   const [allModels, setAllModels] = useState<any[]>([]);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [tempApiKey, setTempApiKey] = useState('');
+  const [newFact, setNewFact] = useState('');
+
+  const handleAddFact = () => {
+    if (!newFact.trim()) return;
+    const currentFacts = settings.userFacts || [];
+    setSettings((prev) => ({
+      ...prev,
+      userFacts: [...currentFacts, newFact.trim()],
+    }));
+    setNewFact('');
+  };
+
+  const handleRemoveFact = (index: number) => {
+    const currentFacts = settings.userFacts || [];
+    setSettings((prev) => ({
+      ...prev,
+      userFacts: currentFacts.filter((_, i) => i !== index),
+    }));
+  };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const modelPickerRef = useRef<HTMLDivElement>(null);
@@ -129,21 +151,15 @@ export default function App() {
     setError(null);
 
     try {
-      // 🧠 Správa paměti: Podle zvoleného režimu ořízneme historii zpráv
-      let historyToSend = [...newMessages];
-      const maxHistory = settings.maxHistoryMessages ?? 10;
-      
-      if (settings.memoryMode === 'limit') {
-        historyToSend = newMessages.slice(-maxHistory);
-      } else if (settings.memoryMode === 'summary') {
-        // Ve speciálním režimu 'summary' (shrnutí) vezmeme pouze užší okno nejnovější konverzace a zbytek ignorujeme
-        historyToSend = newMessages.slice(-4);
-      }
+      // 🧠 Správa paměti: V aktuálním chatu se posílá celá historie konverzace bez dodatečného omezování
+      const historyToSend = [...newMessages];
 
       // Propojení základních instrukcí s pamětí (fakta o uživateli)
-      const memoryInsert = settings.customMemoryContext 
-        ? `\n\n[TRVALÁ PAMĚŤ (Fakta o uživateli, která musíš znát a respektovat v každé odpovědi)]:\n- Jméno uživatele: ${settings.userNickname || 'Uživatel'}\n- Jméno asistenta: ${settings.aiPersonaName || 'Asistent'}\n${settings.customMemoryContext}`
-        : `\n\n[TRVALÁ PAMĚŤ]:\n- Jméno uživatele: ${settings.userNickname || 'Uživatel'}\n- Jméno asistenta: ${settings.aiPersonaName || 'Asistent'}`;
+      const factsText = (settings.userFacts && settings.userFacts.length > 0)
+        ? settings.userFacts.map(fact => `- ${fact}`).join('\n')
+        : '';
+
+      const memoryInsert = `\n\n[TRVALÁ PAMĚŤ (Fakta o uživateli, která musíš znát a respektovat v každé odpovědi)]:\n- Jméno uživatele: ${settings.userNickname || 'Uživatel'}${factsText ? '\n' + factsText : ''}`;
 
       const dynamicSystemPrompt = settings.systemPrompt + memoryInsert;
 
@@ -260,62 +276,27 @@ export default function App() {
       </header>
 
       {/* Main Container */}
-      {!settings.apiKey ? (
-        /* Welcome & API Key Entry View */
-        <div className="flex-1 flex items-center justify-center p-4">
-          <motion.div 
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-md w-full bg-white rounded-3xl p-8 shadow-[0_10px_30px_rgba(0,0,0,0.03)] border border-gray-100"
-          >
-            <div className="w-12 h-12 rounded-2xl bg-gray-950 text-white flex items-center justify-center mb-6 shadow-sm">
-              <Key className="w-5 h-5 text-white" />
-            </div>
-            
-            <h2 className="text-xl font-medium tracking-tight text-gray-900 mb-2">Connect to OpenRouter</h2>
-            <p className="text-sm text-gray-500 leading-relaxed mb-6">
-              To host and run this chat securely on GitHub Pages, enter your OpenRouter API Key below. Your key is stored exclusively in your local browser storage.
-            </p>
-
-            <form onSubmit={handleApiKeySubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">OpenRouter API Key</label>
-                <input
-                  type="password"
-                  required
-                  value={tempApiKey}
-                  onChange={(e) => setTempApiKey(e.target.value)}
-                  placeholder="sk-or-v1-..."
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-950/5 focus:border-gray-900 transition-all text-sm font-mono text-gray-800"
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-xs text-gray-400 pt-1">
-                <a 
-                  href="https://openrouter.ai/keys" 
-                  target="_blank" 
-                  referrerPolicy="no-referrer" 
-                  className="hover:text-gray-900 underline transition-colors"
-                >
-                  Get your OpenRouter key here
-                </a>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-gray-950 text-white py-3 rounded-xl font-medium hover:bg-gray-800 transition-colors shadow-sm flex items-center justify-center gap-2 text-sm mt-4 cursor-pointer"
-              >
-                <span>Continue to Chat</span>
-                <ArrowRight size={16} />
-              </button>
-            </form>
-          </motion.div>
-        </div>
-      ) : (
-        /* The Actual Chat Workspace */
-        <>
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 w-full max-w-4xl mx-auto flex flex-col gap-6">
-            {messages.length === 0 && null}
+            {messages.length === 0 && (
+              <div className="flex-1 flex flex-col items-center justify-center py-16 text-center select-none my-auto">
+                <div className="w-16 h-16 rounded-3xl bg-gray-950 text-white flex items-center justify-center mb-6 shadow-sm border border-gray-800 animate-pulse">
+                  <Bot className="w-7 h-7 text-white" />
+                </div>
+                <h1 className="text-lg font-bold text-gray-900 tracking-tight">Jak vám dnes mohu pomoci?</h1>
+                <p className="text-xs text-gray-400 mt-2 max-w-sm leading-relaxed">
+                  Tento chat běží zcela lokálně ve vašem prohlížeči. Všechny informace a zprávy zůstávají v bezpečí u vás.
+                </p>
+                {!settings.apiKey && (
+                  <button
+                    onClick={() => setIsSettingsOpen(true)}
+                    className="mt-6 inline-flex items-center gap-2 px-4 py-2.5 bg-gray-950 text-white text-xs font-semibold rounded-xl hover:bg-gray-800 transition-all border border-gray-950/20 shadow-sm cursor-pointer"
+                  >
+                    <Key size={13} />
+                    <span>Zadat API klíč v nastavení</span>
+                  </button>
+                )}
+              </div>
+            )}
 
             <AnimatePresence initial={false}>
               {messages.map((msg, i) => (
@@ -367,10 +348,20 @@ export default function App() {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }} 
                 animate={{ opacity: 1, scale: 1 }} 
-                className="flex gap-3 justify-center items-center text-red-500 text-xs px-4 py-3.5 bg-red-55/10 rounded-2xl mx-auto max-w-lg text-center border border-red-200/20 shadow-sm"
+                className="flex flex-col gap-2 justify-center items-center text-red-500 text-xs px-4 py-3.5 bg-red-50/10 rounded-2xl mx-auto max-w-lg text-center border border-red-200/20 shadow-sm"
               >
-                <AlertCircle size={14} className="shrink-0" />
-                <p className="font-medium">{error}</p>
+                <div className="flex gap-2 items-center justify-center">
+                  <AlertCircle size={14} className="shrink-0" />
+                  <p className="font-semibold">{error}</p>
+                </div>
+                {!settings.apiKey && (
+                  <button 
+                    onClick={() => setIsSettingsOpen(true)}
+                    className="mt-0.5 text-xs font-bold text-gray-900 border-b border-gray-900 hover:text-gray-700 hover:border-gray-700 transition-all cursor-pointer"
+                  >
+                    Otevřít nastavení chatu
+                  </button>
+                )}
               </motion.div>
             )}
             
@@ -487,8 +478,6 @@ export default function App() {
             </div>
             
           </footer>
-        </>
-      )}
 
       {/* Full screen Settings Panel */}
       <AnimatePresence>
@@ -564,7 +553,7 @@ export default function App() {
                     </h1>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {activeTab === 'general' && 'Základní konfigurace, přístupový API klíč a instrukce.'}
-                      {activeTab === 'memory' && 'Uchovávání kontextu, historie zpráv a trvalá fakta o vás.'}
+                      {activeTab === 'memory' && 'Uchovávání trvalých faktů o vás pro chytřejší odpovědi.'}
                     </p>
                   </div>
                   <button
@@ -602,38 +591,22 @@ export default function App() {
                             </button>
                           )}
                         </div>
-                        <p className="text-[10px] text-gray-400 leading-relaxed">
-                          Tento klíč je bezpečně uložen pouze ve vašem internetovém prohlížeči (localStorage) a neposílá se na žádný externí server kromě přímého volání rozhraní OpenRouter.
-                        </p>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                        <div className="space-y-2">
-                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Vaše přezdívka</label>
-                          <input
-                            type="text"
-                            value={settings.userNickname ?? 'Uživatel'}
-                            onChange={(e) => setSettings({ ...settings, userNickname: e.target.value })}
-                            placeholder="Napište své jméno"
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-950/5 focus:border-gray-900 transition-all text-xs font-semibold text-gray-800"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Jméno asistenta</label>
-                          <input
-                            type="text"
-                            value={settings.aiPersonaName ?? 'Asistent'}
-                            onChange={(e) => setSettings({ ...settings, aiPersonaName: e.target.value })}
-                            placeholder="Napište jméno asistenta"
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-950/5 focus:border-gray-900 transition-all text-xs font-semibold text-gray-800"
-                          />
-                        </div>
+                      <div className="space-y-2 pt-1">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Vaše přezdívka</label>
+                        <input
+                          type="text"
+                          value={settings.userNickname ?? 'Uživatel'}
+                          onChange={(e) => setSettings({ ...settings, userNickname: e.target.value })}
+                          placeholder="Napište své jméno"
+                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-950/5 focus:border-gray-900 transition-all text-xs font-semibold text-gray-800"
+                        />
                       </div>
 
                       {/* System Prompt Instructions */}
-                      <div className="space-y-2 pt-2">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block font-semibold">Základní instrukce (System Prompt)</label>
+                      <div className="space-y-2 pt-1">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block font-semibold">System prompt</label>
                         <textarea
                           value={settings.systemPrompt}
                           onChange={(e) => setSettings({ ...settings, systemPrompt: e.target.value })}
@@ -641,155 +614,67 @@ export default function App() {
                           placeholder="Jsi užitečný minimalistický asistent..."
                           className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-950/5 focus:border-gray-400 transition-all resize-none text-xs text-gray-800 font-mono leading-relaxed"
                         />
-                        <p className="text-[10px] text-gray-400 leading-relaxed">
-                          Základní instrukce pro model. Zde můžete nastavit chování asistenta a jazyk odpovědí (např. Češtinu).
-                        </p>
                       </div>
                     </div>
                   )}
 
                   {/* MEMORY TAB (Správa paměti) */}
                   {activeTab === 'memory' && (
-                    <div className="space-y-6">
-                      <div className="space-y-2.5">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Strategie správy paměti (Context Control)</label>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                          <div 
-                            onClick={() => setSettings({ ...settings, memoryMode: 'full' })}
-                            className={`p-4 rounded-2xl border cursor-pointer select-none transition-all flex flex-col gap-1.5 ${
-                              settings.memoryMode === 'full' 
-                                ? 'border-gray-950 bg-gray-950/5' 
-                                : 'border-gray-200 hover:border-gray-400 bg-white'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-gray-900">Plná paměť</span>
-                              <input 
-                                type="radio" 
-                                name="memoryMode" 
-                                checked={settings.memoryMode === 'full'} 
-                                onChange={() => {}} 
-                                className="accent-gray-950"
-                              />
-                            </div>
-                            <p className="text-[10px] text-gray-500 leading-relaxed">
-                              Posílá celou historii konverzace. Vhodné pro hluboké diskuze, ale spotřebovává nejvíce tokenů.
-                            </p>
-                          </div>
-
-                          <div 
-                            onClick={() => setSettings({ ...settings, memoryMode: 'limit' })}
-                            className={`p-4 rounded-2xl border cursor-pointer select-none transition-all flex flex-col gap-1.5 ${
-                              settings.memoryMode === 'limit' 
-                                ? 'border-gray-950 bg-gray-950/5' 
-                                : 'border-gray-200 hover:border-gray-400 bg-white'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-gray-900">Optimalizovaný limit</span>
-                              <input 
-                                type="radio" 
-                                name="memoryMode" 
-                                checked={settings.memoryMode === 'limit'} 
-                                onChange={() => {}} 
-                                className="accent-gray-950"
-                              />
-                            </div>
-                            <p className="text-[10px] text-gray-500 leading-relaxed">
-                              Omezuje historii na X posledních zpráv. Skvělá rovnováha mezi rychlostí a pamětí.
-                            </p>
-                          </div>
-
-                          <div 
-                            onClick={() => setSettings({ ...settings, memoryMode: 'summary' })}
-                            className={`p-4 rounded-2xl border cursor-pointer select-none transition-all flex flex-col gap-1.5 ${
-                              settings.memoryMode === 'summary' 
-                                ? 'border-gray-950 bg-gray-950/5' 
-                                : 'border-gray-200 hover:border-gray-400 bg-white'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-bold text-gray-900">Vymazáno / Bez paměti</span>
-                              <input 
-                                type="radio" 
-                                name="memoryMode" 
-                                checked={settings.memoryMode === 'summary'} 
-                                onChange={() => {}} 
-                                className="accent-gray-950"
-                              />
-                            </div>
-                            <p className="text-[10px] text-gray-500 leading-relaxed">
-                              Posílá pouze 4 nejčerstvější příspěvky. Extrémně šetrný režim vhodný pro jednorázové dotazy.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Sliding controls */}
-                      {settings.memoryMode === 'limit' && (
-                        <motion.div 
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          className="space-y-3 bg-gray-50 p-4 rounded-2xl border border-gray-200"
-                        >
-                          <div className="flex justify-between items-center">
-                            <label className="text-xs font-semibold text-gray-700">Délka uchovávané zpětné historie</label>
-                            <span className="px-2.5 py-1 bg-white border border-gray-200 rounded-lg text-xs font-bold text-gray-900 font-mono">
-                              {settings.maxHistoryMessages ?? 10} zpráv
-                            </span>
-                          </div>
-                          <input
-                            type="range"
-                            min={2}
-                            max={40}
-                            step={2}
-                            value={settings.maxHistoryMessages ?? 10}
-                            onChange={(e) => setSettings({ ...settings, maxHistoryMessages: parseInt(e.target.value) })}
-                            className="w-full accent-gray-950"
-                          />
-                          <p className="text-[10px] text-gray-400">Model si bude pamatovat přesně tento počet posledních výroků konverzace.</p>
-                        </motion.div>
-                      )}
-
+                    <div className="space-y-4">
                       {/* Virtual core memory system */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Trvalá fakta a kontext (Virtual Core Memory)</label>
-                          <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 flex items-center gap-1">
-                            <Sparkles size={10} />
-                            Fakta o vás
-                          </span>
-                        </div>
-                        <textarea
-                          value={settings.customMemoryContext ?? ''}
-                          onChange={(e) => setSettings({ ...settings, customMemoryContext: e.target.value })}
-                          rows={4}
-                          placeholder="Např. Marek žije v Praze. Odpovědi mají být technické a logické. Chci používat výrazy z programování."
-                          className="w-full px-4 py-3 bg-gray-50 border border-gray-200 focus:bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-950/5 focus:border-gray-400 transition-all resize-none text-xs text-gray-800 leading-relaxed font-sans"
-                        />
-                        <p className="text-[10px] text-gray-400 leading-relaxed">
-                          Tato fakta jsou posílána v **každé zprávě** nezávisle na vyčištění kontextu. Asistent si je bude pamatovat trvale (např. vaše profese, oblíbené technologie, jazykové návyky).
-                        </p>
-                      </div>
+                      <div className="space-y-3">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Trvalá fakta</label>
 
-                      {/* Reset local session */}
-                      <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div>
-                          <h3 className="text-xs font-bold text-gray-900">Reset místní historie zpráv</h3>
-                          <p className="text-[10px] text-gray-400 mt-0.5">Smaže uložené zprávy z této konverzace z vašeho webového prohlížeče.</p>
+                        {/* Facts list */}
+                        <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                          {(!settings.userFacts || settings.userFacts.length === 0) ? (
+                            <div className="text-center py-6 px-4 border border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
+                              <p className="text-xs text-gray-400">Žádná uložená fakta. Přidejte informace níže.</p>
+                            </div>
+                          ) : (
+                            settings.userFacts.map((fact, index) => (
+                              <div 
+                                key={index}
+                                className="flex items-start justify-between gap-3 p-3 bg-gray-50/60 border border-gray-200 rounded-xl text-xs text-gray-700 leading-relaxed font-medium hover:bg-white hover:border-gray-300 transition-all"
+                              >
+                                <span className="flex-1">{fact}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveFact(index)}
+                                  className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-all shrink-0 cursor-pointer"
+                                  title="Odebrat fakt"
+                                >
+                                  <Trash2 size={13} />
+                                </button>
+                              </div>
+                            ))
+                          )}
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (confirm('Opravdu si přejete smazat celou historii chatu?')) {
-                              handleNewChat();
-                            }
-                          }}
-                          className="px-4 py-2 border border-red-200 hover:bg-red-50 text-red-600 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer shadow-sm"
-                        >
-                          <Trash2 size={13} />
-                          <span>Vyčistit chat ({messages.length})</span>
-                        </button>
+
+                        {/* Add fact field */}
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={newFact}
+                            onChange={(e) => setNewFact(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddFact();
+                              }
+                            }}
+                            placeholder="Přidat nové trvalé info (např. Chci tykat / Jsem programátor...)"
+                            className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 focus:bg-white rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-950/5 focus:border-gray-400 transition-all text-xs text-gray-800"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddFact}
+                            className="px-4 py-2.5 bg-gray-950 hover:bg-gray-800 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer whitespace-nowrap"
+                          >
+                            <Plus size={14} />
+                            <span>Přidat</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}

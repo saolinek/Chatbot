@@ -14,5 +14,6 @@ export interface Settings {
   userNickname?: string;
   aiPersonaName?: string;
   customMemoryContext?: string;
+  userFacts?: string[];
 }
 
