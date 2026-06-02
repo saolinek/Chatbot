@@ -1,0 +1,6 @@
+{
+  "name": "Minimalist OpenRouter Chat",
+  "description": "A clean, minimalist AI chat application that uses a custom OpenRouter API key.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
