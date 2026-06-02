@@ -316,17 +316,17 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
       );
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 text-gray-900 font-sans selection:bg-gray-100">
+    <div className="flex flex-col h-full w-full bg-gray-50 text-gray-900 font-sans selection:bg-gray-100 overflow-hidden">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 shrink-0">
         <div className="flex items-center gap-3">
           <button
             onClick={handleNewChat}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gray-950 text-white rounded-xl hover:bg-gray-800 transition-all shadow-sm cursor-pointer"
-            title="Start a new chat session"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-gray-950 text-white rounded-xl hover:bg-gray-800 active:scale-95 transition-all shadow-sm cursor-pointer"
+            title="Nový chat"
           >
             <Plus size={13} />
-            <span>New Chat</span>
+            <span>Nový chat</span>
           </button>
         </div>
         
@@ -340,15 +340,15 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
         <div className="flex items-center gap-2">
           <span 
             onClick={() => setIsModelPickerOpen(true)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-150/75 hover:bg-gray-200/80 text-gray-700 transition-all cursor-pointer select-none border border-gray-200/55"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold bg-white border border-gray-200/80 text-gray-700 hover:bg-gray-50 transition-all cursor-pointer select-none shadow-sm"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
             <span>{settings.model.split('/').pop()}</span>
           </span>
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="p-2 text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-all rounded-full"
-            title="System Settings"
+            className="p-2.5 text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-all rounded-xl active:scale-95"
+            title="Nastavení"
           >
             <SettingsIcon size={16} />
           </button>
@@ -359,18 +359,33 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 w-full max-w-4xl mx-auto flex flex-col gap-6">
             {messages.length === 0 && (
               <div className="flex-1 flex flex-col items-center justify-center py-16 text-center select-none my-auto">
-                <div className="w-16 h-16 rounded-3xl bg-gray-950 text-white flex items-center justify-center mb-6 shadow-sm border border-gray-800 animate-pulse">
+                <motion.div 
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', damping: 20 }}
+                  className="w-16 h-16 rounded-3xl bg-gray-950 text-white flex items-center justify-center mb-6 shadow-xl shadow-gray-900/10 border border-gray-800"
+                >
                   <Bot className="w-7 h-7 text-white" />
-                </div>
-                <h1 className="text-lg font-bold text-gray-900 tracking-tight">Jak vám dnes mohu pomoci?</h1>
+                </motion.div>
+                <motion.h1 
+                  initial={{ y: 5, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-[20px] font-bold text-gray-900 tracking-tight"
+                >
+                  Jak vám dnes mohu pomoci?
+                </motion.h1>
                 {!settings.apiKey && (
-                  <button
+                  <motion.button
+                    initial={{ y: 5, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
                     onClick={() => setIsSettingsOpen(true)}
-                    className="mt-6 inline-flex items-center gap-2 px-4 py-2.5 bg-gray-950 text-white text-xs font-semibold rounded-xl hover:bg-gray-800 transition-all border border-gray-950/20 shadow-sm cursor-pointer"
+                    className="mt-6 inline-flex items-center gap-2 px-4 py-2.5 bg-gray-950 text-white text-[13px] font-semibold rounded-xl hover:bg-gray-800 transition-all border border-gray-950/20 shadow-sm cursor-pointer active:scale-95"
                   >
-                    <Key size={13} />
+                    <Key size={14} />
                     <span>Zadat API klíč v nastavení</span>
-                  </button>
+                  </motion.button>
                 )}
               </div>
             )}
@@ -406,14 +421,14 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
 
             {isLoading && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
                 className="flex gap-4"
               >
-                <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-white border border-gray-200 shadow-sm text-gray-505">
+                <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-white border border-gray-200 shadow-sm text-gray-500">
                   <Bot size={13} />
                 </div>
-                <div className="px-5 py-3.5 bg-transparent text-gray-400 text-sm flex gap-1 items-center">
+                <div className="px-5 py-3.5 bg-transparent text-gray-400 text-sm flex gap-1 items-center h-[46px]">
                   <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
                   <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
                   <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
@@ -425,20 +440,64 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }} 
                 animate={{ opacity: 1, scale: 1 }} 
-                className="flex flex-col gap-2 justify-center items-center text-red-500 text-xs px-4 py-3.5 bg-red-50/10 rounded-2xl mx-auto max-w-lg text-center border border-red-200/20 shadow-sm"
+                className="flex flex-col gap-3 p-4 bg-red-50/45 border border-red-200/60 rounded-2xl mx-auto w-full max-w-xl shadow-[0_4px_20px_rgba(239,68,68,0.06)] shrink-0"
               >
-                <div className="flex gap-2 items-center justify-center">
-                  <AlertCircle size={14} className="shrink-0" />
-                  <p className="font-semibold">{error}</p>
+                <div className="flex gap-2.5 items-start">
+                  <AlertCircle size={16} className="text-red-500 shrink-0 mt-0.5" />
+                  <div className="text-left space-y-1">
+                    <h4 className="text-xs font-bold text-red-700 uppercase tracking-wider">Chyba při komunikaci / Poskytovatel modelu</h4>
+                    <p className="text-[12px] text-red-600 font-medium leading-relaxed">{error}</p>
+                    <p className="text-[10px] text-gray-500 font-normal leading-relaxed">
+                      Zpráva "Provider Error" znamená, že konkrétní server či poskytovatel vybraného modelu na OpenRouteru je momentálně nedostupný nebo přetížený. Výběr modelu můžete změnit dole nebo zkusit stabilní doporučený model.
+                    </p>
+                  </div>
                 </div>
-                {!settings.apiKey && (
-                  <button 
-                    onClick={() => setIsSettingsOpen(true)}
-                    className="mt-0.5 text-xs font-bold text-gray-900 border-b border-gray-900 hover:text-gray-700 hover:border-gray-700 transition-all cursor-pointer"
+                
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-red-200/20 mt-1">
+                  {!settings.apiKey ? (
+                    <button 
+                      onClick={() => setIsSettingsOpen(true)}
+                      className="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-800 rounded-xl text-xs font-semibold transition-all cursor-pointer shadow-sm"
+                    >
+                      Otevřít nastavení a zadat API klíč
+                    </button>
+                  ) : (
+                    <>
+                      {settings.model !== 'google/gemini-2.5-flash:free' && (
+                        <button
+                          onClick={() => {
+                            setSettings(prev => ({ ...prev, model: 'google/gemini-2.5-flash:free' }));
+                            setError(null);
+                            setToast({ message: '🧠 Přepnuto na stabilní model Gemini 2.5 Flash', type: 'success' });
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                        >
+                          <Sparkles size={13} className="text-emerald-500" />
+                          <span>Přepnout na Gemini 2.5 Flash (Zdarma)</span>
+                        </button>
+                      )}
+                      {settings.model !== 'openrouter/free' && (
+                        <button
+                          onClick={() => {
+                            setSettings(prev => ({ ...prev, model: 'openrouter/free' }));
+                            setError(null);
+                            setToast({ message: '🧠 Přepnuto na univerzální OpenRouter Free', type: 'success' });
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+                        >
+                          <RotateCcw size={13} />
+                          <span>Použít OpenRouter Free</span>
+                        </button>
+                      )}
+                    </>
+                  )}
+                  <button
+                    onClick={() => setError(null)}
+                    className="px-3 py-1.5 bg-white hover:bg-gray-50 border border-gray-200 text-gray-500 hover:text-gray-900 rounded-xl text-xs font-semibold transition-all cursor-pointer ml-auto"
                   >
-                    Otevřít nastavení chatu
+                    Skrýt chybu
                   </button>
-                )}
+                </div>
               </motion.div>
             )}
             
@@ -463,7 +522,7 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
                       <Search size={14} className="text-gray-400" />
                       <input
                         type="text"
-                        placeholder="Search models..."
+                        placeholder="Hledat modely..."
                         value={modelSearch}
                         onChange={(e) => setModelSearch(e.target.value)}
                         className="w-full bg-transparent border-none text-xs focus:outline-none placeholder:text-gray-400 font-sans text-gray-800"
@@ -478,12 +537,12 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
                     
                     <div className="max-h-60 overflow-y-auto p-1.5">
                       <div className="text-[10px] font-semibold text-gray-400 tracking-wider uppercase px-2.5 py-1">
-                        {allModels.length > 0 && modelSearch ? 'Search Results' : 'System Models'}
+                        {allModels.length > 0 && modelSearch ? 'Výsledky hledání' : 'Systémové modely'}
                       </div>
                       
                       {filteredModels.length === 0 ? (
-                        <div className="p-4 text-center text-xs text-none text-gray-400">
-                          No models matched your search
+                        <div className="p-4 text-center text-xs text-gray-400">
+                          Žádné modely nenalezeny
                         </div>
                       ) : (
                         filteredModels.map((m) => {
@@ -537,6 +596,12 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
                     onKeyDown={handleKeyDown}
                     placeholder=""
                     rows={1}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="sentences"
+                    spellCheck="false"
+                    data-form-type="other"
+                    name="chat-message-input-no-autofill"
                     className="w-full bg-transparent border-none py-3.5 pl-1 pr-14 text-sm resize-none focus:outline-none text-gray-800 placeholder:text-gray-400 max-h-[200px]"
                     style={{ 
                       height: input ? 'auto' : '44px',
@@ -764,10 +829,10 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
             <div className="p-4 border-t border-gray-200/60 bg-gray-50 md:hidden flex justify-end shrink-0">
               <button
                 onClick={() => setIsSettingsOpen(false)}
-                className="px-5 py-2.5 bg-gray-950 text-white hover:bg-gray-800 transition-all rounded-xl text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer shadow-sm animate-pulse"
+                className="px-6 py-3 bg-gray-950 text-white hover:bg-gray-800 transition-all rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 cursor-pointer shadow-md shadow-gray-900/10 active:scale-95"
               >
                 <span>Dokončit</span>
-                <ArrowRight size={13} />
+                <ArrowRight size={14} />
               </button>
             </div>
           </motion.div>
