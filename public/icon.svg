@@ -23,8 +23,5 @@
     <circle cx="80" cy="112" r="16" fill="#ffffff" />
     <circle cx="140" cy="112" r="16" fill="#ffffff" />
     <circle cx="200" cy="112" r="16" fill="#ffffff" />
-    
-    <!-- Ambient Sparkle / Tech vibe -->
-    <path d="M220 60 L226 72 L238 72 L228 80 L232 92 L220 84 L208 92 L212 80 L202 72 L214 72 Z" fill="#ffffff" opacity="0.9" />
   </g>
 </svg>

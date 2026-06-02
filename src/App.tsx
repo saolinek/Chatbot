@@ -5,7 +5,6 @@ import { Message, Settings } from './types';
 
 const POPULAR_MODELS = [
   { id: 'openrouter/free', name: 'OpenRouter Free', provider: 'OpenRouter', tier: 'Free' },
-  { id: 'google/gemini-2.5-flash:free', name: 'Gemini 2.5 Flash (Free)', provider: 'Google', tier: 'Free' },
   { id: 'meta-llama/llama-3-8b-instruct:free', name: 'Llama 3.8B (Free)', provider: 'Meta', tier: 'Free' },
   { id: 'anthropic/claude-3.7-sonnet', name: 'Claude 3.7 Sonnet', provider: 'Anthropic', tier: 'Premium' },
   { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', provider: 'Anthropic', tier: 'Premium' },
@@ -337,7 +336,7 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
           {settings.model}
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="relative flex items-center gap-2">
           <span 
             onClick={() => setIsModelPickerOpen(true)}
             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold bg-white border border-gray-200/80 text-gray-700 hover:bg-gray-50 transition-all cursor-pointer select-none shadow-sm"
@@ -352,6 +351,74 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
           >
             <SettingsIcon size={16} />
           </button>
+
+          {/* Floating Model Picker Popover */}
+          <AnimatePresence>
+            {isModelPickerOpen && (
+              <motion.div
+                ref={modelPickerRef}
+                initial={{ opacity: 0, y: -5, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -5, scale: 0.95 }}
+                className="absolute top-12 right-0 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-30"
+              >
+                <div className="p-3 border-b border-gray-150 bg-gray-50 flex items-center gap-2">
+                  <Search size={14} className="text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Hledat modely..."
+                    value={modelSearch}
+                    onChange={(e) => setModelSearch(e.target.value)}
+                    className="w-full bg-transparent border-none text-xs focus:outline-none placeholder:text-gray-400 font-sans text-gray-800"
+                    autoFocus
+                  />
+                  {modelSearch && (
+                    <button onClick={() => setModelSearch('')} className="p-0.5 hover:bg-gray-200 rounded-full">
+                      <X size={10} className="text-gray-400" />
+                    </button>
+                  )}
+                </div>
+                
+                <div className="max-h-60 overflow-y-auto p-1.5">
+                  <div className="text-[10px] font-semibold text-gray-400 tracking-wider uppercase px-2.5 py-1">
+                    {allModels.length > 0 && modelSearch ? 'Výsledky hledání' : 'Systémové modely'}
+                  </div>
+                  
+                  {filteredModels.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-gray-400">
+                      Žádné modely nenalezeny
+                    </div>
+                  ) : (
+                    filteredModels.map((m) => {
+                      const isSelected = settings.model === (m.id || m.id);
+                      return (
+                        <button
+                          key={m.id}
+                          onClick={() => {
+                            setSettings(prev => ({ ...prev, model: m.id }));
+                            setIsModelPickerOpen(false);
+                          }}
+                          className="w-full flex items-center justify-between text-left px-2.5 py-2.5 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
+                        >
+                          <div className="min-w-0 pr-2">
+                            <p className="text-xs font-semibold text-gray-800 truncate">
+                              {m.name || m.id.split('/').pop()}
+                            </p>
+                            <p className="text-[10px] text-gray-400 truncate font-mono">
+                              {m.id}
+                            </p>
+                          </div>
+                          {isSelected && (
+                            <Check size={14} className="text-gray-900 shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </header>
 
@@ -448,7 +515,7 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
                     <h4 className="text-xs font-bold text-red-700 uppercase tracking-wider">Chyba při komunikaci / Poskytovatel modelu</h4>
                     <p className="text-[12px] text-red-600 font-medium leading-relaxed">{error}</p>
                     <p className="text-[10px] text-gray-500 font-normal leading-relaxed">
-                      Zpráva "Provider Error" znamená, že konkrétní server či poskytovatel vybraného modelu na OpenRouteru je momentálně nedostupný nebo přetížený. Výběr modelu můžete změnit dole nebo zkusit stabilní doporučený model.
+                      Zpráva "Provider Error" znamená, že konkrétní server či poskytovatel vybraného modelu na OpenRouteru je momentálně nedostupný nebo přetížený. Výběr modelu můžete změnit dole.
                     </p>
                   </div>
                 </div>
@@ -463,19 +530,6 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
                     </button>
                   ) : (
                     <>
-                      {settings.model !== 'google/gemini-2.5-flash:free' && (
-                        <button
-                          onClick={() => {
-                            setSettings(prev => ({ ...prev, model: 'google/gemini-2.5-flash:free' }));
-                            setError(null);
-                            setToast({ message: '🧠 Přepnuto na stabilní model Gemini 2.5 Flash', type: 'success' });
-                          }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200/80 rounded-xl text-xs font-semibold transition-all cursor-pointer"
-                        >
-                          <Sparkles size={13} className="text-emerald-500" />
-                          <span>Přepnout na Gemini 2.5 Flash (Zdarma)</span>
-                        </button>
-                      )}
                       {settings.model !== 'openrouter/free' && (
                         <button
                           onClick={() => {
@@ -508,88 +562,9 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
           <footer className="p-4 sm:p-6 bg-white border-t border-gray-200 shrink-0">
             <div className="max-w-4xl mx-auto relative">
               
-              {/* Floating Model Picker Popover (Toggled by +) */}
-              <AnimatePresence>
-                {isModelPickerOpen && (
-                  <motion.div
-                    ref={modelPickerRef}
-                    initial={{ opacity: 0, y: 15, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 15, scale: 0.95 }}
-                    className="absolute bottom-16 left-0 w-72 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-30"
-                  >
-                    <div className="p-3 border-b border-gray-150 bg-gray-50 flex items-center gap-2">
-                      <Search size={14} className="text-gray-400" />
-                      <input
-                        type="text"
-                        placeholder="Hledat modely..."
-                        value={modelSearch}
-                        onChange={(e) => setModelSearch(e.target.value)}
-                        className="w-full bg-transparent border-none text-xs focus:outline-none placeholder:text-gray-400 font-sans text-gray-800"
-                        autoFocus
-                      />
-                      {modelSearch && (
-                        <button onClick={() => setModelSearch('')} className="p-0.5 hover:bg-gray-200 rounded-full">
-                          <X size={10} className="text-gray-400" />
-                        </button>
-                      )}
-                    </div>
-                    
-                    <div className="max-h-60 overflow-y-auto p-1.5">
-                      <div className="text-[10px] font-semibold text-gray-400 tracking-wider uppercase px-2.5 py-1">
-                        {allModels.length > 0 && modelSearch ? 'Výsledky hledání' : 'Systémové modely'}
-                      </div>
-                      
-                      {filteredModels.length === 0 ? (
-                        <div className="p-4 text-center text-xs text-gray-400">
-                          Žádné modely nenalezeny
-                        </div>
-                      ) : (
-                        filteredModels.map((m) => {
-                          const isSelected = settings.model === (m.id || m.id);
-                          return (
-                            <button
-                              key={m.id}
-                              onClick={() => {
-                                setSettings(prev => ({ ...prev, model: m.id }));
-                                setIsModelPickerOpen(false);
-                              }}
-                              className="w-full flex items-center justify-between text-left px-2.5 py-2.5 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer"
-                            >
-                              <div className="min-w-0 pr-2">
-                                <p className="text-xs font-semibold text-gray-800 truncate">
-                                  {m.name || m.id.split('/').pop()}
-                                </p>
-                                <p className="text-[10px] text-gray-400 truncate font-mono">
-                                  {m.id}
-                                </p>
-                              </div>
-                              {isSelected && (
-                                <Check size={14} className="text-gray-900 shrink-0" />
-                              )}
-                            </button>
-                          );
-                        })
-                      )}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
               {/* Chat Input Text Area */}
               <div className="flex items-end gap-2.5">
                 <div className="relative flex-1 bg-gray-50 border border-gray-200 rounded-2xl flex items-center pr-3 overflow-hidden focus-within:ring-2 focus-within:ring-gray-950/5 focus-within:border-gray-400 transition-all min-h-[52px]">
-                  
-                  {/* Plus Button inside Chatbox */}
-                  <button
-                    onClick={() => setIsModelPickerOpen(!isModelPickerOpen)}
-                    className={`p-3 self-end text-gray-400 hover:text-gray-900 transition-colors hover:bg-gray-150/40 rounded-full m-1 cursor-pointer flex items-center justify-center ${isModelPickerOpen ? 'bg-gray-100 text-gray-900' : ''}`}
-                    title="Choose AI Model"
-                    type="button"
-                  >
-                    <Plus size={18} className={`transition-transform duration-200 ${isModelPickerOpen ? 'rotate-45' : ''}`} />
-                  </button>
-                  
                   <textarea
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
@@ -602,7 +577,7 @@ Tyto tagy budou aplikací před uživatelem skryty, uvidíš je jen ty v příš
                     spellCheck="false"
                     data-form-type="other"
                     name="chat-message-input-no-autofill"
-                    className="w-full bg-transparent border-none py-3.5 pl-1 pr-16 text-sm resize-none focus:outline-none text-gray-800 placeholder:text-gray-400 max-h-[200px] chat-textarea"
+                    className="w-full bg-transparent border-none py-3.5 pl-4 pr-16 text-sm resize-none focus:outline-none text-gray-800 placeholder:text-gray-400 max-h-[200px] chat-textarea"
                     style={{ 
                       height: input ? 'auto' : '44px',
                     }}
